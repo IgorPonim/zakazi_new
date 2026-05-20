@@ -18,14 +18,26 @@
         .add-form button { background: #1e6f3f; color: white; border: none; padding: 8px 24px; border-radius: 40px; cursor: pointer; }
         .orders-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 1400px; }
         .orders-table th { background: #e9f2fc; color: #1e466e; padding: 12px 8px; border-bottom: 2px solid #caddf0; }
-        .orders-table td { padding: 14px 8px; border-bottom: 1px solid #e2edf7; vertical-align: middle; }
+        .orders-table td { padding: 14px 8px; border-bottom: 1px solid #e2edf7; vertical-align: middle; text-align: center; }
+        .orders-table th, .orders-table td { border-left: 1px solid black; border-right: 1px solid black; }
         .orders-table tr:hover td { background-color: #f6fafe; }
+        
+        /* Подсветка строк в зависимости от исполнителя */
+        .orders-table tr.assigned-igor td {
+            background-color: rgba(0, 86, 184, 0.537);
+        }
+        .orders-table tr.assigned-anton td {
+            background-color: rgba(6, 189, 82, 0.347);
+        }
+        .orders-table tr.assigned-igor:hover td,
+        .orders-table tr.assigned-anton:hover td {
+            background-color: #f6fafe;
+        }
+        
         input[type="checkbox"] { width: 18px; height: 18px; accent-color: #1661b4; cursor: pointer; }
         .who-select { padding: 5px 8px; border-radius: 30px; border: 1px solid #bdd4ec; background: white; font-size: 0.8rem; cursor: pointer; width: 100px; }
         .price-cell { font-weight: 600; color: #1a6e3b; background: #f0f9f0; display: inline-block; padding: 4px 10px; border-radius: 30px; }
         .order-num { font-weight: 700; background: #eef2fa; display: inline-block; width: 40px; border-radius: 40px; padding: 4px 0; text-align: center; }
-       
-        /* ===== ИСПРАВЛЕННЫЙ СТИЛЬ ДЛЯ РЕДАКТИРУЕМОГО ТЕКСТА ===== */
         .editable-text {
             background: #fefce8;
             border: 1px solid #e2e8f0;
@@ -41,16 +53,6 @@
             overflow-wrap: break-word;
             line-height: 1.4;
         }
-        .orders-table th,
-.orders-table td {
-  border-left: 1px solid black;
-  border-right: 1px solid black;
-}
-        /* ===================================================== */
-        .orders-table td {
-  text-align: center;
-  vertical-align: middle;
-}
         .editable-text:focus { outline: none; border-color: #1661b4; background: white; }
         .delete-btn { background: #e74c3c; border: none; color: white; font-size: 1.1rem; font-weight: bold; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
         .delete-btn:hover { background: #c0392b; }
@@ -59,7 +61,6 @@
     </style>
 </head>
 <body>
-<!-- ТЕЛО ТАБЛИЦЫ — такое же, как было, без изменений -->
 <div class="container">
     <div class="header">
         <div class="title">
@@ -83,7 +84,7 @@
                 <tr><th>#</th><th>Адрес</th><th>Заказчик ФИО, телефон</th><th>Что делаем</th><th>Цена</th><th>Выезд есть</th><th>Кто делает</th><th>Оплачен</th><th>Подали на присвоение адреса</th><th>Отправили электронно подачу</th><th>Отдали диск</th><th>Заказ закрыт</th><th>Удалить</th></tr>
             </thead>
             <tbody id="ordersTableBody">
-                <tr class="empty-row"><td colspan="13">Загрузка...</tr>
+                <tr class="empty-row"><td colspan="13">Загрузка...</td>
             </tbody>
         </table>
     </div>
@@ -127,26 +128,33 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbz9Mb8KKUcqLMJAVnSqz0cZ
     function renderOrders(orders) {
         const tbody = document.getElementById('ordersTableBody');
         if (!orders.length) {
-            tbody.innerHTML = '<tr class="empty-row"><td colspan="13">Нет заказов. Добавьте первый через форму. </tr>';
+            tbody.innerHTML = '<tr class="empty-row"><td colspan="13">Нет заказов. Добавьте первый через форму. </td>';
             return;
         }
-        tbody.innerHTML = orders.map((order, idx) => `
-            <tr data-id="${order.id}">
-                <td class="order-num">${idx + 1}</td>
-                <td>${makeEditable(order.id, 'address', order.address)}</td>
-                <td>${makeEditable(order.id, 'customer', order.customer)}</td>
-                <td>${makeEditable(order.id, 'task', order.task)}</td>
-                <td>${makeEditable(order.id, 'price', order.price, false)}</td>
-                <td>${renderCheckbox(order.id, 'hasDeparture', order.hasDeparture)}</td>
-                <td>${renderSelect(order.id, order.whoDoes)}</td>
-                <td>${renderCheckbox(order.id, 'isPaid', order.isPaid)}</td>
-                <td>${renderCheckbox(order.id, 'addressAssigned', order.addressAssigned)}</td>
-                <td>${renderCheckbox(order.id, 'electronicSubmitted', order.electronicSubmitted)}</td>
-                <td>${renderCheckbox(order.id, 'diskGiven', order.diskGiven)}</td>
-                <td>${renderCheckbox(order.id, 'orderClosed', order.orderClosed)}</td>
-                <td><button class="delete-btn" data-id="${order.id}">🗑️</button></td>
-             </tr>
-        `).join('');
+        
+        tbody.innerHTML = orders.map((order, idx) => {
+            let rowClass = '';
+            if (order.whoDoes === 'Игорь') rowClass = 'assigned-igor';
+            if (order.whoDoes === 'Антон') rowClass = 'assigned-anton';
+            
+            return `
+                <tr data-id="${order.id}" class="${rowClass}">
+                    <td class="order-num">${idx + 1}</td>
+                    <td>${makeEditable(order.id, 'address', order.address)}</td>
+                    <td>${makeEditable(order.id, 'customer', order.customer)}</td>
+                    <td>${makeEditable(order.id, 'task', order.task)}</td>
+                    <td>${makeEditable(order.id, 'price', order.price, false)}</td>
+                    <td>${renderCheckbox(order.id, 'hasDeparture', order.hasDeparture)}</td>
+                    <td>${renderSelect(order.id, order.whoDoes)}</td>
+                    <td>${renderCheckbox(order.id, 'isPaid', order.isPaid)}</td>
+                    <td>${renderCheckbox(order.id, 'addressAssigned', order.addressAssigned)}</td>
+                    <td>${renderCheckbox(order.id, 'electronicSubmitted', order.electronicSubmitted)}</td>
+                    <td>${renderCheckbox(order.id, 'diskGiven', order.diskGiven)}</td>
+                    <td>${renderCheckbox(order.id, 'orderClosed', order.orderClosed)}</td>
+                    <td><button class="delete-btn" data-id="${order.id}">🗑️</button></td>
+                </tr>
+            `;
+        }).join('');
 
         attachEditableEvents();
         attachCheckboxEvents();
@@ -243,12 +251,12 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbz9Mb8KKUcqLMJAVnSqz0cZ
 
     async function refreshOrders() {
         const tbody = document.getElementById('ordersTableBody');
-        tbody.innerHTML = '<tr class="empty-row"><td colspan="13">Загрузка...</tr>';
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="13">Загрузка...<\/tr>';
         try {
             const orders = await fetchOrders();
             renderOrders(orders);
         } catch(e) {
-            tbody.innerHTML = '<tr class="empty-row"><td colspan="13">Ошибка загрузки. Проверьте интернет.</tr>';
+            tbody.innerHTML = '<tr class="empty-row"><td colspan="13">Ошибка загрузки. Проверьте интернет.<\/tr>';
         }
     }
 
