@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Игорь и Антон — Заказы</title>
+    <style>
+        * { box-sizing: border-box; font-family: system-ui, 'Segoe UI', Roboto, sans-serif; }
+        body { background: #eef5ff; margin: 0; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 28px; box-shadow: 0 12px 30px rgba(0,0,0,0.05); padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .title h1 { margin: 0; font-size: 1.8rem; color: #1661b4; }
+        .title p { margin: 6px 0 0; color: #3f6b9e; font-size: 0.85rem; }
+        .refresh-btn { background: #1661b4; border: none; color: white; padding: 8px 20px; border-radius: 40px; cursor: pointer; }
+        .add-form { background: #f0f7ff; border-radius: 24px; padding: 16px 20px; margin-bottom: 28px; display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+        .add-form .field { display: flex; flex-direction: column; gap: 6px; font-size: 0.75rem; font-weight: 500; color: #1e466e; }
+        .add-form input, .add-form textarea { padding: 8px 12px; border-radius: 20px; border: 1px solid #bdd4ec; font-size: 0.85rem; width: 180px; }
+        .add-form textarea { width: 200px; resize: vertical; }
+        .add-form button { background: #1e6f3f; color: white; border: none; padding: 8px 24px; border-radius: 40px; cursor: pointer; }
+        .orders-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 1400px; }
+        .orders-table th { background: #e9f2fc; color: #1e466e; padding: 12px 8px; border-bottom: 2px solid #caddf0; }
+        .orders-table td { padding: 14px 8px; border-bottom: 1px solid #e2edf7; vertical-align: middle; }
+        .orders-table tr:hover td { background-color: #f6fafe; }
+        input[type="checkbox"] { width: 18px; height: 18px; accent-color: #1661b4; cursor: pointer; }
+        .who-select { padding: 5px 8px; border-radius: 30px; border: 1px solid #bdd4ec; background: white; font-size: 0.8rem; cursor: pointer; width: 100px; }
+        .price-cell { font-weight: 600; color: #1a6e3b; background: #f0f9f0; display: inline-block; padding: 4px 10px; border-radius: 30px; }
+        .order-num { font-weight: 700; background: #eef2fa; display: inline-block; width: 40px; border-radius: 40px; padding: 4px 0; text-align: center; }
+       
+        /* ===== ИСПРАВЛЕННЫЙ СТИЛЬ ДЛЯ РЕДАКТИРУЕМОГО ТЕКСТА ===== */
+        .editable-text {
+            background: #fefce8;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 6px 10px;
+            min-width: 140px;
+            max-width: 250px;
+            cursor: text;
+            font-size: 0.8rem;
+            display: inline-block;
+            white-space: normal;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            line-height: 1.4;
+        }
+        .orders-table th,
+.orders-table td {
+  border-left: 1px solid black;
+  border-right: 1px solid black;
+}
+        /* ===================================================== */
+        .orders-table td {
+  text-align: center;
+  vertical-align: middle;
+}
+        .editable-text:focus { outline: none; border-color: #1661b4; background: white; }
+        .delete-btn { background: #e74c3c; border: none; color: white; font-size: 1.1rem; font-weight: bold; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        .delete-btn:hover { background: #c0392b; }
+        .empty-row td { text-align: center; padding: 40px; color: #6f8fae; }
+        .footer { margin-top: 24px; font-size: 0.7rem; text-align: center; color: #6c8dae; }
+    </style>
+</head>
+<body>
+<!-- ТЕЛО ТАБЛИЦЫ — такое же, как было, без изменений -->
+<div class="container">
+    <div class="header">
+        <div class="title">
+            <h1>📋 Заказы · Игорь & Антон</h1>
+            <p>общая таблица — сохраняется в Google Sheets</p>
+        </div>
+        <button class="refresh-btn" id="refreshButton">⟳ Обновить</button>
+    </div>
+
+    <div class="add-form">
+        <div class="field"><span>📍 Адрес</span><input type="text" id="newAddress" placeholder="ул. Ленина, 10"></div>
+        <div class="field"><span>👤 Заказчик ФИО, телефон</span><input type="text" id="newCustomer" placeholder="Иванов И.И. +7..."></div>
+        <div class="field"><span>📌 Что делаем</span><textarea id="newTask" rows="1" placeholder="Описание работы"></textarea></div>
+        <div class="field"><span>💰 Цена (₽)</span><input type="text" id="newPrice" placeholder="5000"></div>
+        <button id="addOrderBtn">➕ Добавить заказ</button>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table class="orders-table">
+            <thead>
+                <tr><th>#</th><th>Адрес</th><th>Заказчик ФИО, телефон</th><th>Что делаем</th><th>Цена</th><th>Выезд есть</th><th>Кто делает</th><th>Оплачен</th><th>Подали на присвоение адреса</th><th>Отправили электронно подачу</th><th>Отдали диск</th><th>Заказ закрыт</th><th>Удалить</th></tr>
+            </thead>
+            <tbody id="ordersTableBody">
+                <tr class="empty-row"><td colspan="13">Загрузка...</tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="footer">✅ Клик по тексту — редактирование. Галочки и выбор исполнителя — сразу сохраняются.</div>
+</div>
+
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbz9Mb8KKUcqLMJAVnSqz0cZKY5WyY0-qJm3jHAz9388YKA3xdrlmEWMuGCUdFlfONTllA/exec';
+
+    async function fetchOrders() {
+        const resp = await fetch(API_URL);
+        const allData = await resp.json();
+        return allData.filter(order => order.address && order.address !== 'Адрес');
+    }
+
+    async function updateOrder(id, field, value) {
+        await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({ id, field, value })
+        });
+        refreshOrders();
+    }
+
+    async function deleteOrder(id) {
+        if (!confirm('Удалить этот заказ?')) return;
+        await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'delete', id })
+        });
+        refreshOrders();
+    }
+
+    async function addNewOrder(orderData) {
+        const resp = await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'add', ...orderData })
+        });
+        return resp.ok;
+    }
+
+    function renderOrders(orders) {
+        const tbody = document.getElementById('ordersTableBody');
+        if (!orders.length) {
+            tbody.innerHTML = '<tr class="empty-row"><td colspan="13">Нет заказов. Добавьте первый через форму. </tr>';
+            return;
+        }
+        tbody.innerHTML = orders.map((order, idx) => `
+            <tr data-id="${order.id}">
+                <td class="order-num">${idx + 1}</td>
+                <td>${makeEditable(order.id, 'address', order.address)}</td>
+                <td>${makeEditable(order.id, 'customer', order.customer)}</td>
+                <td>${makeEditable(order.id, 'task', order.task)}</td>
+                <td>${makeEditable(order.id, 'price', order.price, false)}</td>
+                <td>${renderCheckbox(order.id, 'hasDeparture', order.hasDeparture)}</td>
+                <td>${renderSelect(order.id, order.whoDoes)}</td>
+                <td>${renderCheckbox(order.id, 'isPaid', order.isPaid)}</td>
+                <td>${renderCheckbox(order.id, 'addressAssigned', order.addressAssigned)}</td>
+                <td>${renderCheckbox(order.id, 'electronicSubmitted', order.electronicSubmitted)}</td>
+                <td>${renderCheckbox(order.id, 'diskGiven', order.diskGiven)}</td>
+                <td>${renderCheckbox(order.id, 'orderClosed', order.orderClosed)}</td>
+                <td><button class="delete-btn" data-id="${order.id}">🗑️</button></td>
+             </tr>
+        `).join('');
+
+        attachEditableEvents();
+        attachCheckboxEvents();
+        attachSelectEvents();
+        attachDeleteEvents();
+    }
+
+    function attachDeleteEvents() {
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.removeEventListener('click', handleDelete);
+            btn.addEventListener('click', handleDelete);
+        });
+    }
+
+    async function handleDelete(e) {
+        const id = parseInt(e.target.dataset.id);
+        await deleteOrder(id);
+    }
+
+    function makeEditable(id, field, value, isPrice = false) {
+        const displayValue = (value === undefined || value === null) ? '' : value;
+        const className = isPrice ? 'price-cell editable-field' : 'editable-text';
+        const dataType = isPrice ? 'price' : 'text';
+        return `<span class="${className}" contenteditable="true" data-id="${id}" data-field="${field}" data-type="${dataType}">${escapeHtml(String(displayValue))}</span>`;
+    }
+
+    function attachEditableEvents() {
+        document.querySelectorAll('.editable-field, .editable-text').forEach(el => {
+            el.removeEventListener('blur', handleEdit);
+            el.addEventListener('blur', handleEdit);
+        });
+    }
+
+    async function handleEdit(e) {
+        const el = e.target;
+        const id = parseInt(el.dataset.id);
+        const field = el.dataset.field;
+        let newValue = el.innerText.trim();
+        if (el.dataset.type === 'price') {
+            newValue = newValue.replace(/[^0-9]/g, '');
+            el.innerText = newValue || '0';
+        }
+        await updateOrder(id, field, newValue);
+    }
+
+    function attachCheckboxEvents() {
+        document.querySelectorAll('.ajax-checkbox').forEach(cb => {
+            cb.removeEventListener('change', handleCheckboxChange);
+            cb.addEventListener('change', handleCheckboxChange);
+        });
+    }
+
+    async function handleCheckboxChange(e) {
+        const cb = e.target;
+        const id = parseInt(cb.dataset.id);
+        const field = cb.dataset.field;
+        await updateOrder(id, field, cb.checked);
+    }
+
+    function attachSelectEvents() {
+        document.querySelectorAll('.who-select-ajax').forEach(sel => {
+            sel.removeEventListener('change', handleSelectChange);
+            sel.addEventListener('change', handleSelectChange);
+        });
+    }
+
+    async function handleSelectChange(e) {
+        const sel = e.target;
+        const id = parseInt(sel.dataset.id);
+        await updateOrder(id, 'whoDoes', sel.value);
+    }
+
+    function renderCheckbox(orderId, field, value) {
+        return `<input type="checkbox" class="ajax-checkbox" data-id="${orderId}" data-field="${field}" ${value ? 'checked' : ''}>`;
+    }
+
+    function renderSelect(orderId, currentWho) {
+        return `<select class="who-select-ajax" data-id="${orderId}">
+            <option value="">—</option>
+            <option value="Игорь" ${currentWho === 'Игорь' ? 'selected' : ''}>Игорь</option>
+            <option value="Антон" ${currentWho === 'Антон' ? 'selected' : ''}>Антон</option>
+        </select>`;
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    async function refreshOrders() {
+        const tbody = document.getElementById('ordersTableBody');
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="13">Загрузка...</tr>';
+        try {
+            const orders = await fetchOrders();
+            renderOrders(orders);
+        } catch(e) {
+            tbody.innerHTML = '<tr class="empty-row"><td colspan="13">Ошибка загрузки. Проверьте интернет.</tr>';
+        }
+    }
+
+    document.getElementById('addOrderBtn').onclick = async () => {
+        const address = document.getElementById('newAddress').value.trim();
+        const customer = document.getElementById('newCustomer').value.trim();
+        const task = document.getElementById('newTask').value.trim();
+        const price = document.getElementById('newPrice').value.trim();
+        if (!address) {
+            alert('Заполните Адрес');
+            return;
+        }
+        const btn = document.getElementById('addOrderBtn');
+        btn.innerText = 'Отправка...';
+        btn.disabled = true;
+        try {
+            await addNewOrder({ address, customer, task, price });
+            document.getElementById('newAddress').value = '';
+            document.getElementById('newCustomer').value = '';
+            document.getElementById('newTask').value = '';
+            document.getElementById('newPrice').value = '';
+            await refreshOrders();
+        } catch(e) {
+            alert('Ошибка при добавлении');
+        } finally {
+            btn.innerText = '➕ Добавить заказ';
+            btn.disabled = false;
+        }
+    };
+
+    document.getElementById('refreshButton').onclick = () => refreshOrders();
+    refreshOrders();
+</script>
+</body>
+</html>
