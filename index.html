@@ -6,7 +6,7 @@
     <style>
         * { box-sizing: border-box; font-family: system-ui, 'Segoe UI', Roboto, sans-serif; }
         body { background: #eef5ff; margin: 0; padding: 20px; }
-        .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 28px; box-shadow: 0 12px 30px rgba(0,0,0,0.05); padding: 20px; }
+        .container { max-width: 1600px; margin: 0 auto; background: white; border-radius: 28px; box-shadow: 0 12px 30px rgba(0,0,0,0.05); padding: 20px; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
         .title h1 { margin: 0; font-size: 1.8rem; color: #1661b4; }
         .title p { margin: 6px 0 0; color: #3f6b9e; font-size: 0.85rem; }
@@ -16,24 +16,15 @@
         .add-form input, .add-form textarea { padding: 8px 12px; border-radius: 20px; border: 1px solid #bdd4ec; font-size: 0.85rem; width: 180px; }
         .add-form textarea { width: 200px; resize: vertical; }
         .add-form button { background: #1e6f3f; color: white; border: none; padding: 8px 24px; border-radius: 40px; cursor: pointer; }
-        .orders-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 1400px; }
+        .orders-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; min-width: 1500px; }
         .orders-table th { background: #e9f2fc; color: #1e466e; padding: 12px 8px; border-bottom: 2px solid #caddf0; }
-        .orders-table td { padding: 14px 8px; border-bottom: 1px solid #e2edf7; vertical-align: middle; text-align: center; }
-        .orders-table th, .orders-table td { border-left: 1px solid black; border-right: 1px solid black; }
+        .orders-table td { padding: 12px 6px; border-bottom: 1px solid #e2edf7; vertical-align: top; }
+        .orders-table th, .orders-table td { border-left: 1px solid #caddf0; border-right: 1px solid #caddf0; }
         .orders-table tr:hover td { background-color: #f6fafe; }
-        
-        /* Подсветка строк в зависимости от исполнителя */
-        .orders-table tr.assigned-igor td {
-            background-color: rgba(0, 86, 184, 0.537);
-        }
-        .orders-table tr.assigned-anton td {
-            background-color: rgba(6, 189, 82, 0.347);
-        }
+        .orders-table tr.assigned-igor td { background-color: rgba(5, 110, 230, 0.557); }
+        .orders-table tr.assigned-anton td { background-color: rgba(3, 200, 85, 0.578); }
         .orders-table tr.assigned-igor:hover td,
-        .orders-table tr.assigned-anton:hover td {
-            background-color: #f6fafe;
-        }
-        
+        .orders-table tr.assigned-anton:hover td { background-color: #f6fafe; }
         input[type="checkbox"] { width: 18px; height: 18px; accent-color: #1661b4; cursor: pointer; }
         .who-select { padding: 5px 8px; border-radius: 30px; border: 1px solid #bdd4ec; background: white; font-size: 0.8rem; cursor: pointer; width: 100px; }
         .price-cell { font-weight: 600; color: #1a6e3b; background: #f0f9f0; display: inline-block; padding: 4px 10px; border-radius: 30px; }
@@ -44,20 +35,39 @@
             border-radius: 16px;
             padding: 6px 10px;
             min-width: 140px;
-            max-width: 250px;
+            max-width: 220px;
             cursor: text;
             font-size: 0.8rem;
             display: inline-block;
             white-space: normal;
             word-wrap: break-word;
-            overflow-wrap: break-word;
-            line-height: 1.4;
         }
         .editable-text:focus { outline: none; border-color: #1661b4; background: white; }
-        .delete-btn { background: #e74c3c; border: none; color: white; font-size: 1.1rem; font-weight: bold; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        .date-field {
+            background: #f9fafb;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 4px 8px;
+            font-size: 0.7rem;
+            width: 90px;
+            text-align: center;
+            margin-left: 8px;
+            cursor: text;
+        }
+        .date-field:focus { outline: none; border-color: #1661b4; background: white; }
+        .checkbox-with-date {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .delete-btn { background: #e74c3c; border: none; color: white; font-size: 1.1rem; font-weight: bold; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; }
         .delete-btn:hover { background: #c0392b; }
         .empty-row td { text-align: center; padding: 40px; color: #6f8fae; }
         .footer { margin-top: 24px; font-size: 0.7rem; text-align: center; color: #6c8dae; }
+        th, td { text-align: center; vertical-align: middle; }
+        .address-cell, .customer-cell, .task-cell { text-align: left; }
     </style>
 </head>
 <body>
@@ -81,18 +91,32 @@
     <div style="overflow-x: auto;">
         <table class="orders-table">
             <thead>
-                <tr><th>#</th><th>Адрес</th><th>Заказчик ФИО, телефон</th><th>Что делаем</th><th>Цена</th><th>Выезд есть</th><th>Кто делает</th><th>Оплачен</th><th>Подали на присвоение адреса</th><th>Отправили электронно подачу</th><th>Отдали диск</th><th>Заказ закрыт</th><th>Удалить</th></tr>
+                <tr>
+                    <th>#</th><th>Адрес</th><th>Заказчик</th><th>Что делаем</th><th>Цена</th>
+                    <th>Выезд есть</th><th>Кто делает</th><th>Оплачен</th>
+                    <th colspan="2">Подали на присвоение адреса</th>
+                    <th>Отправили мы (Технокад)</th>
+                    <th>Отдали диск на руки</th>
+                    <th>Заказ закрыт</th>
+                    <th>Удалить</th>
+                </tr>
+                <tr>
+                    <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>
+                    <th>✅</th><th>📅 Дата</th>
+                    <th></th><th></th><th></th>
+                    <th></th>
+                </tr>
             </thead>
             <tbody id="ordersTableBody">
-                <tr class="empty-row"><td colspan="13">Загрузка...</td>
+                <tr class="empty-row"><td colspan="14">Загрузка...</td></tr>
             </tbody>
         </table>
     </div>
-    <div class="footer">✅ Клик по тексту — редактирование. Галочки и выбор исполнителя — сразу сохраняются.</div>
+    <div class="footer">✅ Клик по тексту — редактирование. Галочки и даты — сразу сохраняются.</div>
 </div>
 
 <script>
-const API_URL = 'https://script.google.com/macros/s/AKfycbz9Mb8KKUcqLMJAVnSqz0cZKY5WyY0-qJm3jHAz9388YKA3xdrlmEWMuGCUdFlfONTllA/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbwXqzhumnx-AHwVusZr8ESWxIubU4BOt3PT-2iB21lpqjmA8_BKHOwjPOKeSbCpddJUnA/exec';
 
     async function fetchOrders() {
         const resp = await fetch(API_URL);
@@ -128,7 +152,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbz9Mb8KKUcqLMJAVnSqz0cZ
     function renderOrders(orders) {
         const tbody = document.getElementById('ordersTableBody');
         if (!orders.length) {
-            tbody.innerHTML = '<tr class="empty-row"><td colspan="13">Нет заказов. Добавьте первый через форму. </td>';
+            tbody.innerHTML = '<tr class="empty-row"><td colspan="14">Нет заказов. Добавьте первый.</tr>';
             return;
         }
         
@@ -140,17 +164,23 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbz9Mb8KKUcqLMJAVnSqz0cZ
             return `
                 <tr data-id="${order.id}" class="${rowClass}">
                     <td class="order-num">${idx + 1}</td>
-                    <td>${makeEditable(order.id, 'address', order.address)}</td>
-                    <td>${makeEditable(order.id, 'customer', order.customer)}</td>
-                    <td>${makeEditable(order.id, 'task', order.task)}</td>
-                    <td>${makeEditable(order.id, 'price', order.price, false)}</td>
+                    <td class="address-cell">${makeEditable(order.id, 'address', order.address)}</td>
+                    <td class="customer-cell">${makeEditable(order.id, 'customer', order.customer)}</td>
+                    <td class="task-cell">${makeEditable(order.id, 'task', order.task)}</td>
+                    <td>${makeEditable(order.id, 'price', order.price, true)}</td>
                     <td>${renderCheckbox(order.id, 'hasDeparture', order.hasDeparture)}</td>
                     <td>${renderSelect(order.id, order.whoDoes)}</td>
                     <td>${renderCheckbox(order.id, 'isPaid', order.isPaid)}</td>
+                    
+                    <!-- Подали на присвоение адреса: галочка + дата -->
                     <td>${renderCheckbox(order.id, 'addressAssigned', order.addressAssigned)}</td>
+                    <td>${renderDateField(order.id, 'addressAssignedDate', order.addressAssignedDate)}</td>
+                    
+                    <!-- Остальные — простые галочки -->
                     <td>${renderCheckbox(order.id, 'electronicSubmitted', order.electronicSubmitted)}</td>
                     <td>${renderCheckbox(order.id, 'diskGiven', order.diskGiven)}</td>
                     <td>${renderCheckbox(order.id, 'orderClosed', order.orderClosed)}</td>
+                    
                     <td><button class="delete-btn" data-id="${order.id}">🗑️</button></td>
                 </tr>
             `;
@@ -158,6 +188,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbz9Mb8KKUcqLMJAVnSqz0cZ
 
         attachEditableEvents();
         attachCheckboxEvents();
+        attachDateEvents();
         attachSelectEvents();
         attachDeleteEvents();
     }
@@ -170,7 +201,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbz9Mb8KKUcqLMJAVnSqz0cZ
     }
 
     async function handleDelete(e) {
-        const id = parseInt(e.target.dataset.id);
+        const id = parseInt(e.target.closest('.delete-btn').dataset.id);
         await deleteOrder(id);
     }
 
@@ -180,6 +211,12 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbz9Mb8KKUcqLMJAVnSqz0cZ
         const dataType = isPrice ? 'price' : 'text';
         return `<span class="${className}" contenteditable="true" data-id="${id}" data-field="${field}" data-type="${dataType}">${escapeHtml(String(displayValue))}</span>`;
     }
+
+function renderDateField(id, field, value) {
+    // Просто текст — никаких преобразований
+    const displayValue = (value === undefined || value === null) ? '' : String(value);
+    return `<input type="text" class="date-field ajax-date" data-id="${id}" data-field="${field}" value="${escapeHtml(displayValue)}" placeholder="ДД.ММ.ГГГГ">`;
+}
 
     function attachEditableEvents() {
         document.querySelectorAll('.editable-field, .editable-text').forEach(el => {
@@ -198,6 +235,20 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbz9Mb8KKUcqLMJAVnSqz0cZ
             el.innerText = newValue || '0';
         }
         await updateOrder(id, field, newValue);
+    }
+
+    function attachDateEvents() {
+        document.querySelectorAll('.ajax-date').forEach(input => {
+            input.removeEventListener('change', handleDateChange);
+            input.addEventListener('change', handleDateChange);
+        });
+    }
+
+    async function handleDateChange(e) {
+        const input = e.target;
+        const id = parseInt(input.dataset.id);
+        const field = input.dataset.field;
+        await updateOrder(id, field, input.value);
     }
 
     function attachCheckboxEvents() {
@@ -251,12 +302,12 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbz9Mb8KKUcqLMJAVnSqz0cZ
 
     async function refreshOrders() {
         const tbody = document.getElementById('ordersTableBody');
-        tbody.innerHTML = '<tr class="empty-row"><td colspan="13">Загрузка...<\/tr>';
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="14">Загрузка...<\/tr>';
         try {
             const orders = await fetchOrders();
             renderOrders(orders);
         } catch(e) {
-            tbody.innerHTML = '<tr class="empty-row"><td colspan="13">Ошибка загрузки. Проверьте интернет.<\/tr>';
+            tbody.innerHTML = '<tr class="empty-row"><td colspan="14">Ошибка загрузки.<\/tr>';
         }
     }
 
